@@ -6,6 +6,7 @@ import 'package:test_app/screens/home_page.dart';
 import 'package:wifi_iot/wifi_iot.dart';
 import 'package:wifi_scan/wifi_scan.dart';
 
+
 class LoadingPage extends StatefulWidget {
   const LoadingPage({Key? key}) : super(key: key);
 

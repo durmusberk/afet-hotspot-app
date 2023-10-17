@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
-import 'package:socket_io_client/socket_io_client.dart';
-import 'package:test_app/screens/master_chat_page.dart';
-import 'dart:io';
+import 'package:test_app/models/conversation.dart';
+import 'package:test_app/models/message.dart';
+import 'package:test_app/widgets/message_bubble.dart';
+
 
 class ChatPage extends StatefulWidget {
   final Function(Conversation conversation) onConversationUpdated;
@@ -61,7 +61,7 @@ class _ChatPageState extends State<ChatPage> {
                 return MessageBubble(
                   text: message.text,
                   isSentByUser: message.isSentByUser,
-                  time: message.time ?? DateTime.now(),
+                  time: message.time,
                 );
               },
             ),
@@ -88,66 +88,3 @@ class _ChatPageState extends State<ChatPage> {
   }
 }
 
-class MessageBubble extends StatelessWidget {
-  final String text;
-  final bool isSentByUser;
-  final DateTime time;
-
-  const MessageBubble({
-    super.key,
-    required this.text,
-    required this.isSentByUser,
-    required this.time,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-      child: Column(
-        crossAxisAlignment:
-            isSentByUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-            decoration: BoxDecoration(
-              color: isSentByUser ? Colors.blue : Colors.grey[300],
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  text,
-                  style: const TextStyle(fontSize: 16),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  DateFormat('HH:mm').format(time),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class Message {
-  final String text;
-  final bool isSentByUser;
-  final DateTime time;
-  final String clientAddress;
-
-  Message({
-    required this.text,
-    required this.isSentByUser,
-    required this.clientAddress,
-    required this.time,
-  });
-}

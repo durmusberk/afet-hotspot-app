@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
-
-import 'package:test_app/screens/chat_page.dart';
+import 'package:test_app/models/message.dart';
 
 class Server {
   late ServerSocket server;
