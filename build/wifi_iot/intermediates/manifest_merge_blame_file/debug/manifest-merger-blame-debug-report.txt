@@ -1,0 +1,41 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.alternadom.wifiiot" >
+4
+5    <uses-sdk
+6        android:minSdkVersion="16"
+6-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_iot-0.3.18+1/android/src/main/AndroidManifest.xml
+7        android:targetSdkVersion="16" />
+7-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_iot-0.3.18+1/android/src/main/AndroidManifest.xml
+8
+9    <uses-feature android:name="android.hardware.wifi" />
+9-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_iot-0.3.18+1/android/src/main/AndroidManifest.xml:3:5-58
+9-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_iot-0.3.18+1/android/src/main/AndroidManifest.xml:3:19-55
+10
+11    <uses-permission android:name="android.permission.INTERNET" />
+11-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_iot-0.3.18+1/android/src/main/AndroidManifest.xml:4:5-67
+11-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_iot-0.3.18+1/android/src/main/AndroidManifest.xml:4:22-64
+12    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+12-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_iot-0.3.18+1/android/src/main/AndroidManifest.xml:5:5-75
+12-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_iot-0.3.18+1/android/src/main/AndroidManifest.xml:5:22-73
+13    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+13-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_iot-0.3.18+1/android/src/main/AndroidManifest.xml:6:5-79
+13-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_iot-0.3.18+1/android/src/main/AndroidManifest.xml:6:22-76
+14    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+14-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_iot-0.3.18+1/android/src/main/AndroidManifest.xml:7:5-79
+14-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_iot-0.3.18+1/android/src/main/AndroidManifest.xml:7:22-76
+15    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+15-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_iot-0.3.18+1/android/src/main/AndroidManifest.xml:8:5-79
+15-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_iot-0.3.18+1/android/src/main/AndroidManifest.xml:8:22-76
+16    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+16-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_iot-0.3.18+1/android/src/main/AndroidManifest.xml:9:5-81
+16-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_iot-0.3.18+1/android/src/main/AndroidManifest.xml:9:22-78
+17    <!-- TODO remove the below two permission from v1.0.0, user need to add this explicitly -->
+18    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+18-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_iot-0.3.18+1/android/src/main/AndroidManifest.xml:11:5-76
+18-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_iot-0.3.18+1/android/src/main/AndroidManifest.xml:11:22-73
+19    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+19-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_iot-0.3.18+1/android/src/main/AndroidManifest.xml:12:5-73
+19-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_iot-0.3.18+1/android/src/main/AndroidManifest.xml:12:22-70
+20
+21</manifest>

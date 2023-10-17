@@ -1,0 +1,4 @@
+#Tue Oct 17 12:39:04 TRT 2023
+base.0=/Users/durmusberk/Development/FlutterWorks/test_app/test_app/build/app/intermediates/dex/debug/mergeDexDebug/classes.dex
+path.0=classes.dex
+renamed.0=classes.dex

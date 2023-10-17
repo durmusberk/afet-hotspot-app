@@ -1,0 +1,26 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="dev.flutternetwork.wifi.wifi_scan" >
+4
+5    <uses-sdk
+6        android:minSdkVersion="16"
+6-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_scan-0.4.0+2/android/src/main/AndroidManifest.xml
+7        android:targetSdkVersion="16" />
+7-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_scan-0.4.0+2/android/src/main/AndroidManifest.xml
+8    <!-- required for: `WifiManager.getScanResult` -->
+9    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+9-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_scan-0.4.0+2/android/src/main/AndroidManifest.xml:4:5-75
+9-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_scan-0.4.0+2/android/src/main/AndroidManifest.xml:4:22-73
+10    <!-- required for: `WifiManager.startScan` -->
+11    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+11-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_scan-0.4.0+2/android/src/main/AndroidManifest.xml:6:5-75
+11-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_scan-0.4.0+2/android/src/main/AndroidManifest.xml:6:22-73
+12    <!-- required for: `WifiManager.getScanResult`, `WifiManager.startScan` -->
+13    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+13-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_scan-0.4.0+2/android/src/main/AndroidManifest.xml:8:5-80
+13-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_scan-0.4.0+2/android/src/main/AndroidManifest.xml:8:22-78
+14    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+14-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_scan-0.4.0+2/android/src/main/AndroidManifest.xml:9:5-78
+14-->/Users/durmusberk/.pub-cache/hosted/pub.dev/wifi_scan-0.4.0+2/android/src/main/AndroidManifest.xml:9:22-76
+15
+16</manifest>
