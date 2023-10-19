@@ -1,11 +1,9 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:test_app/screens/chat_page.dart';
 import 'package:test_app/screens/home_page.dart';
 import 'package:wifi_iot/wifi_iot.dart';
 import 'package:wifi_scan/wifi_scan.dart';
-
 
 class LoadingPage extends StatefulWidget {
   const LoadingPage({Key? key}) : super(key: key);
@@ -70,12 +68,24 @@ class _LoadingPageState extends State<LoadingPage> {
   }
 
   Future<void> _checkAndEnableWifi() async {
-    final isEnabled = await WiFiForIoTPlugin.isEnabled();
-    if (!isEnabled) {
-      await WiFiForIoTPlugin.setEnabled(true);
-      print('wifi enabled');
+  bool isEnabled = await WiFiForIoTPlugin.isEnabled();
+  if (!isEnabled) {
+    // Turn off the hotspot if it is on
+    bool isHotspotEnabled = await WiFiForIoTPlugin.isWiFiAPEnabled();
+    if (isHotspotEnabled) {
+      await WiFiForIoTPlugin.setWiFiAPEnabled(false);
+      print('Hotspot turned off');
     }
+
+    await WiFiForIoTPlugin.setEnabled(true);
+    print('Wi-Fi enabled');
+    while (!isEnabled) {
+      await Future.delayed(Duration(seconds: 1));
+      isEnabled = await WiFiForIoTPlugin.isEnabled();
+    }
+    print('Wi-Fi is now enabled');
   }
+}
 
   @override
   void dispose() {
@@ -87,43 +97,13 @@ class _LoadingPageState extends State<LoadingPage> {
   }
 
   @override
-  void didUpdateWidget(LoadingPage oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    print('didUpdateWidget');
-    _checkAndEnableWifi();
-    _timer = Timer.periodic(Duration(seconds: 3), (timer) async {
-      await _startScan(context);
-      //Delay 5 seconds
-      Future.delayed(Duration(seconds: 5));
-      await _getScannedResults(context);
-      //Get all SSIDs
-      List<String> ssids = [];
-      for (final ap in accessPoints) {
-        ssids.add(ap.ssid);
-      }
-      //Check if any SSID is "Master"
-      if (ssids.contains('AndroidWifi')) {
-        print('Master found');
-        _stopListeningToScanResults();
-        _timer.cancel();
-        //Connect to Master
-
-        await WiFiForIoTPlugin.connect('AndroidWifi');
-
-        // Stop scanning and cancel timer
-        // Show dialog
-
-        _showDialog(context);
-        
-      }
-
-    });
-  }
-
-  @override
   void initState() {
     super.initState();
     print('initState');
+    connectMaster();
+  }
+
+  void connectMaster() {
     _checkAndEnableWifi();
     _timer = Timer.periodic(Duration(seconds: 3), (timer) async {
       await _startScan(context);
@@ -135,9 +115,6 @@ class _LoadingPageState extends State<LoadingPage> {
       for (final ap in accessPoints) {
         ssids.add(ap.ssid);
       }
-
-      // print all fields of all access points
-      
 
       //Check if any SSID is "Master"
       if (ssids.contains('AndroidWifi')) {
@@ -156,114 +133,79 @@ class _LoadingPageState extends State<LoadingPage> {
             await WiFiForIoTPlugin.disconnect();
             await WiFiForIoTPlugin.connect('AndroidWifi');
           }
-        }
-        else {
+        } else {
           await WiFiForIoTPlugin.connect('AndroidWifi');
         }
 
-        // Stop scanning and cancel timer
-        // Show dialog
-
-        _showDialog(context);
-        
+        if (mounted) _showDialog(context);
       }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        alignment: Alignment.center,
-        children: <Widget>[
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                ElevatedButton(
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      barrierDismissible:
-                          false, // Prevents users from dismissing dialog by tapping outside
-                      builder: (BuildContext context) {
-                        Future.delayed(const Duration(seconds: 3), () {
-                          Navigator.pop(context); // Dismiss the AlertDialog
-                          Navigator.pushReplacement(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ChatPage(
-                                conversation: null,
-                                onConversationUpdated: (conversation) {},
-                              ),
-                            ),
-                          );
-                        });
-
-                        return const AlertDialog(
-                          title: Text('BAŞARILI', textAlign: TextAlign.center),
-                          content: Text(
-                            'MASTER BULUNDU CHAT\'E AKTARILIYOR!!!',
-                            textAlign: TextAlign.center,
-                          ),
-                          contentTextStyle: TextStyle(
-                            color: Colors.red,
-                            fontSize: 20,
-                          ),
-                          titleTextStyle: TextStyle(
-                            color: Colors.green,
-                            fontSize: 30,
-                          ),
-                        );
-                      },
-                    );
-                  },
-                  child: const Text('Find Master!'),
+    return WillPopScope(
+      onWillPop: () {
+        Navigator.of(context).pop();
+              //Route to LoadingPage
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const HomePage(),
                 ),
-
-                Align(
-                  alignment: Alignment.bottomCenter,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const HomePage()),
-                      );
-                    },
-                    child: const Text('Go back!'),
-                  ),
-                ), // Add some space between the buttons
-              ],
-            ),
-          ),
-          Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: MediaQuery.of(context).size.width *
-                      0.8, // 80% of screen width
-                  height: MediaQuery.of(context).size.height *
-                      0.4, // 80% of screen height
-                  child: const CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                        Color.fromARGB(255, 255, 0, 0)),
-                    strokeWidth: 20,
-                  ),
-                ), // Loading animation
-                const SizedBox(
-                    height:
-                        16), // Add some space between the CircularProgressIndicator and Text
-                const Text(
-                  'Master Aranıyor!!!',
-                  style: TextStyle(fontSize: 40),
+                (route) =>
+                    false, // This will remove all previous routes from the stack
+              );
+        return Future.value(true);
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              //Route to LoadingPage
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const HomePage(),
                 ),
-              ],
-            ),
+                (route) =>
+                    false, // This will remove all previous routes from the stack
+              );
+            },
+            icon: const Icon(Icons.arrow_back),
           ),
-        ],
+        ),
+        body: Stack(
+          alignment: Alignment.center,
+          children: <Widget>[
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width *
+                        0.8, // 80% of screen width
+                    height: MediaQuery.of(context).size.height *
+                        0.4, // 80% of screen height
+                    child: const CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                          Color.fromARGB(255, 255, 0, 0)),
+                      strokeWidth: 20,
+                    ),
+                  ), // Loading animation
+                  const SizedBox(
+                      height:
+                          16), // Add some space between the CircularProgressIndicator and Text
+                  const Text(
+                    'Master Aranıyor!!!',
+                    style: TextStyle(fontSize: 40),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -275,58 +217,50 @@ class _LoadingPageState extends State<LoadingPage> {
       ..showSnackBar(SnackBar(content: Text(message)));
   } */
   void _showDialog(BuildContext context) {
+    
+    _stopListeningToScanResults();
+    _timer.cancel();
     showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: Text('BAŞARILI', textAlign: TextAlign.center),
-            actions: [
-              ElevatedButton(
-                child: Text('OK'),
-                onPressed: () => Navigator.of(context).pop()
-                ,
-                
+      context: context,
+      barrierDismissible:
+          false, // Prevents users from dismissing dialog by tapping outside
+      builder: (BuildContext context) {
+        Future.delayed(const Duration(seconds: 3), () {
+          Navigator.pop(context); // Dismiss the AlertDialog
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => ChatPage(
+                conversation: null,
+                onConversationUpdated: (conversation) {},
+                isMaster: false,
               ),
-            ],
+            ),
+            (route) =>
+                false, // This will remove all previous routes from the stack
+          );
+          //Remove the loading screen from stack
+        });
+
+        return WillPopScope(
+          onWillPop: () { return Future.value(false); },
+          child: const AlertDialog(
+            title: Text('BAŞARILI', textAlign: TextAlign.center),
+            content: Text(
+              'MASTER BULUNDU CHAT\'E AKTARILIYOR!!!',
+              textAlign: TextAlign.center,
+            ),
+            contentTextStyle: TextStyle(
+              color: Colors.red,
+              fontSize: 20,
+            ),
+            titleTextStyle: TextStyle(
+              color: Colors.green,
+              fontSize: 30,
+            ),
           ),
         );
-
-        _stopListeningToScanResults();
-        _timer.cancel();
-        showDialog(
-          context: context,
-          barrierDismissible:
-              false, // Prevents users from dismissing dialog by tapping outside
-          builder: (BuildContext context) {
-            Future.delayed(const Duration(seconds: 3), () {
-              Navigator.pop(context); // Dismiss the AlertDialog
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => ChatPage(
-                    conversation: null,
-                    onConversationUpdated: (conversation) {},
-                  ),
-                ),
-              );
-            });
-
-            return const AlertDialog(
-              title: Text('BAŞARILI', textAlign: TextAlign.center),
-              content: Text(
-                'MASTER BULUNDU CHAT\'E AKTARILIYOR!!!',
-                textAlign: TextAlign.center,
-              ),
-              contentTextStyle: TextStyle(
-                color: Colors.red,
-                fontSize: 20,
-              ),
-              titleTextStyle: TextStyle(
-                color: Colors.green,
-                fontSize: 30,
-              ),
-            );
-          },
-        );
+      },
+    );
   }
 }
-

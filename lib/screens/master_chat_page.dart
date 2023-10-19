@@ -1,72 +1,95 @@
 import 'dart:async';
+import 'dart:io';
+import 'package:test_app/models/info.dart';
 import 'package:test_app/socket/server.dart';
 import 'package:flutter/material.dart';
 import 'package:test_app/widgets/conversation_tile.dart';
-import 'package:wifi_iot/wifi_iot.dart';
 import 'package:test_app/screens/chat_page.dart';
 import 'package:test_app/models/message.dart';
 import 'package:test_app/models/conversation.dart';
 
 class ConversationListScreen extends StatefulWidget {
+  const ConversationListScreen({super.key});
+
   @override
-  _ConversationListScreenState createState() => _ConversationListScreenState();
+  State<ConversationListScreen> createState() => _ConversationListScreenState();
 }
 
 class _ConversationListScreenState extends State<ConversationListScreen> {
   Completer<bool> _hotspotCompleter = Completer<bool>();
-  bool alertDialogDisplay = false;
+  bool alertDialogDisplayed = false;
   final List<Conversation> _conversations = [];
   //create server object
   final server = Server();
+  StreamSubscription<Socket>? _clientSubscription;
+  StreamSubscription<Message>? _messageSubscription;
+  StreamSubscription<Info>? _infoSubscription;
+
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: const Text('Konuşmalar'),
-        ),
-        body: ListView.builder(
-          itemCount: _conversations.length,
-          itemBuilder: (context, index) {
-            final Conversation conversation = _conversations[index];
-            return ConversationTile(
-              onTitleChanged: (newName) =>
-                  _updateConversationName(index, newName),
-              title: conversation.name,
-              lastMessage: conversation.messages.isNotEmpty
-                  ? conversation.messages.last
-                  : Message(
-                      text: '',
-                      isSentByUser: false,
-                      clientAddress: conversation.name,
-                      time: DateTime.now()),
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChatPage(
-                      conversation: conversation,
-                      onConversationUpdated: _updateConversation,
-                    ),
+      appBar: AppBar(
+        title: const Text('Konuşmalar'),
+      ),
+      body: ListView.builder(
+        itemCount: _conversations.length,
+        itemBuilder: (context, index) {
+          final Conversation conversation = _conversations[index];
+          return ConversationTile(
+            onDismissed: () => _deleteConversation(index),
+            onTitleChanged: (newName) =>
+                _updateConversationName(index, newName),
+            title: conversation.name,
+            lastMessage: conversation.messages.isNotEmpty
+                ? conversation.messages.last
+                : Message(
+                    text: '',
+                    isSentByUser: false,
+                    clientAddress: conversation.name,
+                    time: DateTime.now(),
                   ),
-                );
-              },
-            );
-          },
-        ));
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChatPage(
+                    conversation: conversation,
+                    onConversationUpdated: _updateConversation,
+                    isMaster: true,
+                    server: server,
+                  ),
+                ),
+              );
+            },
+            conversation: conversation,
+            clientAddress: conversation.clientAddress,
+          );
+        },
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    server.stop();
+    _clientSubscription?.cancel();
+    _messageSubscription?.cancel();
+    _infoSubscription?.cancel();
+    super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
     _hotspotCompleter = Completer<bool>();
-    server.start();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _showHotspotAlert();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _showHotspotAlert();
     });
 
     // Listen for new clients and update the conversation list
-    server.onClientConnected.listen((client) {
+    _clientSubscription = server.onClientConnected.listen((client) {
+    if (mounted) {
       setState(() {
         _conversations.add(Conversation(
             name: client.address.address,
@@ -74,55 +97,74 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
             messages: [],
             time: DateTime.now()));
       });
-    });
+    }
+  });
 
-    server.onMessageReceived.listen((Message message) {
+    _messageSubscription = server.onMessageReceived.listen((Message message) {
+      print('👓Received message: ${message.text}');
       setState(() {
-        final index =
-            _conversations.indexWhere((c) => c.name == message.clientAddress);
+        final index = _conversations
+            .indexWhere((c) => c.clientAddress == message.clientAddress);
         if (index != -1) {
           _conversations[index].messages.add(message);
+          _conversations[index].hasUnreadMessages = true;
         } else {
           _conversations.add(Conversation(
               name: message.clientAddress,
               messages: [message],
               time: DateTime.now(),
-              clientAddress: message.clientAddress));
+              clientAddress: message.clientAddress,
+              hasUnreadMessages: true));
+        }
+      });
+    });
+    _infoSubscription=  server.onInfoReceived.listen((Info info) {
+      
+      setState(() {
+        final index = _conversations
+            .indexWhere((c) => c.clientAddress == info.clientAddress);
+        if (index != -1) {
+          _conversations[index].info['latitude'] = info.latitude.toString();
+          _conversations[index].info['longitude'] = info.longitude.toString();
+          _conversations[index].info['batteryLevel'] = info.batteryLevel.toString();
+          _conversations[index].info['rssi'] = info.rssi.toString();
+          _conversations[index].info['distance'] = info.distance.toString();
         }
       });
     });
   }
 
   Future<void> _showHotspotAlert() async {
-    alertDialogDisplay = true;
+    alertDialogDisplayed = true;
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text('Open Hotspot'),
-          content: Text(
+          title: const Text('Open Hotspot'),
+          content: const Text(
               'Lütfen Telefonunuzun Hotspotunu aşağıdaki bilgilerle açınız.'),
           actions: [
-            Text('Hotspot İsmi: AcilHotspot'),
-            Text('Hotspot Şifresi: 12345678'),
+            const Text('Hotspot İsmi: AcilHotspot'),
+            const Text('Hotspot Şifresi: 12345678'),
             TextButton(
-              child: Text('Açtım!'),
+              child: const Text('Açtım!'),
               onPressed: () async {
                 final isEnabled = await _isHotspotEnabled();
-                if (!isEnabled && !_hotspotCompleter.isCompleted) {
+                if (isEnabled && !_hotspotCompleter.isCompleted) {
                   _hotspotCompleter.complete(true);
-                  alertDialogDisplay = false;
+                  alertDialogDisplayed = false;
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
+                    const SnackBar(
                       content: Text('Hotspot açık!'),
                       duration: Duration(seconds: 1),
                     ),
                   );
-                } else if (isEnabled) {
+                  server.start();
+                } else {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
+                    const SnackBar(
                       content: Text('Hotspot açık değil!'),
                     ),
                   );
@@ -133,18 +175,18 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
         );
       },
     );
-    Timer.periodic(Duration(seconds: 3), (timer) async {
-      final isEnabled = await _isHotspotEnabled();
-      if (!isEnabled) {
-        await Future.delayed(Duration(seconds: 3));
-      } else {
-        if (!alertDialogDisplay) {
-          timer.cancel();
-          _hotspotCompleter = Completer<bool>();
-          _showHotspotAlert();
-        }
+
+    final isAPEnabled = await _isHotspotEnabled();
+    if (isAPEnabled) {
+      await Future.delayed(const Duration(seconds: 3));
+    } else {
+      if (!alertDialogDisplayed) {
+        server.stop();
+        _hotspotCompleter = Completer<bool>();
+        await _showHotspotAlert();
       }
-    });
+    }
+
     await _hotspotCompleter.future;
   }
 
@@ -163,9 +205,28 @@ class _ConversationListScreenState extends State<ConversationListScreen> {
       _conversations.removeAt(index);
     });
   }
+
   Future<bool> _isHotspotEnabled() async {
-    final isEnabled = await WiFiForIoTPlugin.isEnabled();
-    return isEnabled;
+    /* //Set AP enabled
+    var isHotspotEnabled = await WiFiForIoTPlugin.isWiFiAPEnabled();
+    if (!isHotspotEnabled) {
+      await WiFiForIoTPlugin.setWiFiAPEnabled(true);
+      print('Hotspot turned on');
+    }
+
+    isHotspotEnabled = await WiFiForIoTPlugin.isWiFiAPEnabled();
+
+    if (isHotspotEnabled) {
+      print('Hotspot is enabled');
+      final ssid = await WiFiForIoTPlugin.getWiFiAPSSID();
+      final password = await WiFiForIoTPlugin.getWiFiAPPreSharedKey();
+      print('SSID: $ssid');
+      print('Password: $password');
+
+    } else {
+      print('Hotspot is not enabled'); */
+
+    return true;
   }
 
   void _updateConversationName(int index, String newName) {
